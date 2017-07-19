@@ -111,6 +111,10 @@
             v.toString().replace(/2017-08-\d+T(\d+:\d+):00\+08:00/, (_, time) => time)
         })()
 
+        const { localStorage } = window
+        const [start, end] = (localStorage && localStorage.getItem('lastRange') || '')
+          .split('#')
+
         const timeline = new vis.Timeline(document.getElementById('visualization'), [
           ...items,
           ...Object.values(communities),
@@ -123,6 +127,8 @@
             isBackground: true,
           },
         ], groups, {
+          start: start || null,
+          end: end || null,
           min: '2017-08-05T08:40:00+08:00',
           max: '2017-08-06T17:10:00+08:00',
           hiddenDates: {
@@ -171,6 +177,14 @@
           `)
           modal.open()
         })
+
+
+        // record last view
+        if (localStorage) {
+          timeline.on('rangechanged', ({ start, end }) => {
+            localStorage.setItem('lastRange', `${start}#${end}`)
+          })
+        }
       })()
     </script>
   </body>

@@ -27,8 +27,10 @@
       #visualization h1 {
         font-size: 1.2em;
         font-weight: normal;
-        line-height: 1em;
-        margin: 5px 0 0;
+        line-height: 1.2em;
+        margin: 5px 0;
+        text-overflow: ellipsis;
+        overflow: hidden;
       }
 
       #visualization .summary {
@@ -158,7 +160,6 @@
             `) : (`
               <small>${getTime(start)} - ${getTime(end)}</small>
               <h1>${content}</h1>
-              <p class="summary">${summary}</p>
             `)
           },
         })

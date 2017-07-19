@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.11.0/tingle.min.css" />
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.20.1/vis.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.11.0/tingle.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.1/mousetrap.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/babel-polyfill@6.23.0/dist/polyfill.min.js"></script>
     <style>
@@ -196,6 +197,49 @@
             localStorage.setItem('lastRange', `${Number(start)}#${Number(end)}`)
           })
         }
+
+        // keyboard support
+        (() => {
+          const animation = {
+            duration: 200,
+            easingFunction: 'linear',
+          }
+
+          let moving = null;
+          const moveTimeline = (percent) => {
+            if (moving == percent) return
+            moving = percent
+
+            const { start, end } = timeline.getWindow()
+            const interval = end - start
+
+            timeline.setWindow({
+              animation,
+              start: start.valueOf() - interval * percent,
+              end: end.valueOf() - interval * percent,
+            })
+
+            setTimeout(() => moving = null, 200)
+          }
+
+          let zooming = null;
+          const zoomTimeline = (percent) => {
+            if (zooming == percent) return
+            zooming = percent
+
+            if (percent > 0)
+              timeline.zoomIn(percent, { animation })
+            else
+              timeline.zoomOut(-percent, { animation })
+
+            setTimeout(() => zooming = null, 200)
+          }
+
+          Mousetrap.bind('left', () => moveTimeline(0.2));
+          Mousetrap.bind('right', () => moveTimeline(-0.2));
+          Mousetrap.bind('up', () => zoomTimeline(0.3));
+          Mousetrap.bind('down', () => zoomTimeline(-0.3));
+        })()
       })()
     </script>
   </body>

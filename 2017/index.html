@@ -129,8 +129,8 @@
             isBackground: true,
           },
         ], groups, {
-          start: start || null,
-          end: end || null,
+          start: Number(start) || null,
+          end: Number(end) || null,
           min: '2017-08-05T08:40:00+08:00',
           max: '2017-08-06T17:10:00+08:00',
           hiddenDates: {
@@ -183,7 +183,7 @@
         // record last view
         if (localStorage) {
           timeline.on('rangechanged', ({ start, end }) => {
-            localStorage.setItem('lastRange', `${start}#${end}`)
+            localStorage.setItem('lastRange', `${Number(start)}#${Number(end)}`)
           })
         }
       })()

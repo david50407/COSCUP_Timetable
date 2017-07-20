@@ -25,12 +25,20 @@
         font-size: 12px;
       }
 
-      .vis-item.dayTwo {
+      #visualization .vis-item.dayTwo {
         background-color: rgba(200, 200, 200, 0.4);
       }
 
-      .vis-item {
+      #visualization .vis-item {
         transition: height 0.3s, top 0.6s;
+      }
+
+      #visualization .vis-item.submission {
+        margin-top: 8px;
+      }
+
+      #visualization .vis-item.community h1 {
+        margin: 0;
       }
 
       #visualization h1 {
@@ -86,6 +94,7 @@
           content: subject,
           title: subject,
           group: room,
+          className: 'submission',
         }))
         const groups = [ ...new Set(submissions.map(({ room }) => room)) ].map(room => ({
           id: room,
@@ -103,6 +112,7 @@
               type: 'background',
               content: name,
               group: item.group,
+              className: 'community',
 
               isCommunity: true,
             }
@@ -150,7 +160,7 @@
           margin: {
             item: {
               horizontal: 20,
-              vertical: 60,
+              vertical: 40,
             },
           },
           zoomMin: 5 * 60 * 1000,

@@ -11,6 +11,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.20.1/vis.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.11.0/tingle.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.1/mousetrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pangu/3.3.0/pangu.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/babel-polyfill@6.23.0/dist/polyfill.min.js"></script>
     <style>
@@ -81,10 +82,17 @@
 
     <script type="text/babel" data-presets="es2015,stage-1">
       (async function() {
+        const { spacing } = pangu
         const submissions = await fetch('https://coscup.org/2017-assets/json/submissions.json')
           .then(resp => resp.json())
 
-        const items = submissions.map(({ start, end, room, subject, summary, community, speaker, ...sub }, idx) => ({
+        const items = submissions.map(({ subject, summary, community, ...sub }) => ({
+          ...sub,
+
+          subject: spacing(subject),
+          summary: spacing(summary),
+          community: spacing(community),
+        })).map(({ start, end, room, subject, summary, community, speaker, ...sub }, idx) => ({
           start: new Date(start),
           end: new Date(end),
           summary,

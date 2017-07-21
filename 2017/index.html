@@ -122,10 +122,23 @@
       .hide {
         z-index: 1 !important;
       }
+
+      .ruler {
+        visibility: hidden;
+        z-index: 0;
+        position: absolute;
+      }
     </style>
   </head>
   <body>
     <div id="container">
+      <div id="ruler-room" class="ruler">
+        <div class="vis-labelset">
+          <div class="vis-label">
+            <div class="vis-inner">Room 307</div>
+          </div>
+        </div>
+      </div>
       <div id="timeline"></div>
       <div id="my-timeline" class="hide"></div>
       <button id="toggle" class="btn" tabindex="-1">俺の<br>課表</button>
@@ -265,6 +278,7 @@
           filter: ({ className, isBackground }) => isBackground || className.match(/added/),
         })
         const myTimelineContainer = document.getElementById('my-timeline')
+        myTimelineContainer.style.paddingLeft = `${document.getElementById('ruler-room').getBoundingClientRect().width + 1}px`
         const myTimeline = new vis.Timeline(myTimelineContainer, mySubmissions, {
           ...timelineOptions,
           stack: true,

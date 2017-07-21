@@ -82,7 +82,7 @@
       }
 
       #container .vis-item.dayTwo {
-        background-color: rgba(200, 200, 200, 0.4);
+        background-color: rgba(255, 255, 239, 0.4);
       }
 
       #container .vis-item {
@@ -90,13 +90,72 @@
       }
 
       #container .vis-item.submission {
-        margin-top: 8px;
         cursor: pointer;
       }
 
+      #container #timeline .vis-item.submission {
+        margin-top: 8px;
+      }
+
       #container #timeline .vis-item.submission.added {
-        background-color: #adff2f;
-        border-color: #008000;
+        background-color: #cbff7c;
+        border-color: #00cd00;
+      }
+
+      #container #timeline .vis-group.room-201 .community {
+        background-color: rgba(219, 195, 229, .6);
+      }
+      #container #my-timeline .vis-item[data-group='201'] {
+        background-color: rgb(219, 195, 229);
+        border-color: #bb8ecd;
+      }
+
+      #container #timeline .vis-group.room-202 .community {
+        background-color: rgba(249, 232, 160, .6);
+      }
+      #container #my-timeline .vis-item[data-group='202'] {
+        background-color: rgb(249, 232, 160);
+        border-color: #f5d657;
+      }
+
+      #container #timeline .vis-group.room-303 .community {
+        background-color: rgba(182, 218, 242, .6);
+      }
+      #container #my-timeline .vis-item[data-group='303'] {
+        background-color: #b6daf2;
+        border-color: #75b9e7;
+      }
+
+      #container #timeline .vis-group.room-305 .community {
+        background-color: rgba(246, 206, 171, .6);
+      }
+      #container #my-timeline .vis-item[data-group='305'] {
+        background-color: #f6ceab;
+        border-color: #eea667;
+      }
+
+      #container #timeline .vis-group.room-306 .community {
+        background-color: rgba(248, 201, 196, .6);
+      }
+      #container #my-timeline .vis-item[data-group='306'] {
+        background-color: #f8c9c4;
+        border-color: #ef8b80;
+      }
+
+      #container #timeline .vis-group.room-307 .community {
+        background-color: rgba(232, 236, 236, .6);
+      }
+      #container #my-timeline .vis-item[data-group='307'] {
+        background-color: #e8ecec;
+        border-color: #bfc8c9;
+      }
+
+      #container #timeline .vis-group.room-403 .community {
+        background-color: rgba(203, 255, 124, .6);
+      }
+      #container #my-timeline .vis-item[data-group='403'] {
+        background-color: #cbff7c;
+        border-color: #00cd00;
       }
 
       #container .vis-item.community h1 {
@@ -192,6 +251,7 @@
         const groups = [ ...new Set(datas.map(({ room }) => room)) ].map(room => ({
           id: room,
           content: `Room ${room}`,
+          className: `room-${room}`,
         }))
         const communities = submissions.reduce((communities, { start, end, community: name, ...item }) => {
           if (name === '') return communities
@@ -291,8 +351,20 @@
         const myTimeline = new vis.Timeline(myTimelineContainer, mySubmissions, {
           ...timelineOptions,
           stack: true,
-          order(l, r) {
-            return l.start.getTime() - r.start.getTime()
+          margin: {
+            item: {
+              horizontal: -1,
+              vertical: 20,
+            },
+          },
+          dataAttributes: [
+            'group',
+          ],
+
+          order({ start: startL, group: groupL }, { start: startR, group: groupR }) {
+            const diffTime = startL.getTime() - startR.getTime()
+            if (diffTime == 0) return groupL - groupR
+            return diffTime
           },
 
           template({ start, end, content, summary, community, group, ...item }, element, data) {

@@ -57,10 +57,19 @@
         font-size: 1.2em;
       }
 
+      .btn:focus {
+        outline: 0;
+      }
+
       .btn:hover, .btn.toggle {
-        background: #fff;
+        background-color: #fff;
         color: #009a79;
         transition: background .25s ease, color .25s ease;
+      }
+
+      .btn.toggle:hover {
+        background-color: #009a79;
+        color: #fff;
       }
 
       .btn.remove {

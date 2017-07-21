@@ -16,7 +16,7 @@
     <script type="text/javascript" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/babel-polyfill@6.23.0/dist/polyfill.min.js"></script>
     <style>
-      html, body, #visualization {
+      html, body, #container {
         margin: 0;
         padding: 0;
         width: 100%;
@@ -24,27 +24,77 @@
         font-family: 'Noto Sans TC', 'Noto Sans SC Sliced', sans-serif;
       }
 
+      #timeline, #my-timeline {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-color: #fff;
+        z-index: 2;
+      }
+
+      #toggle {
+        position: absolute;
+        bottom: 3.4em;
+        left: 2px;
+        filter: opacity(0.8);
+        z-index: 10;
+      }
+
       body {
         font-size: 12px;
       }
 
-      #visualization .vis-item.dayTwo {
+      .btn {
+        float: right;
+        border: 0 none transparent;
+        background-color: #009a79;
+        color: #fff;
+        cursor: pointer;
+        transition: background .35s ease, color .35s ease;
+        padding: .75em 1em .7em;
+        font-size: 1.2em;
+      }
+
+      .btn:hover, .btn.toggle {
+        background: #fff;
+        color: #009a79;
+        transition: background .25s ease, color .25s ease;
+      }
+
+      .btn.remove {
+        background-color: #9a0325;
+      }
+
+      .btn.remove:hover {
+        background: #fff;
+        color: #9a0325;
+      }
+
+      #container .vis-item.dayTwo {
         background-color: rgba(200, 200, 200, 0.4);
       }
 
-      #visualization .vis-item {
+      #container .vis-item {
         transition: height 0.3s, top 0.6s;
       }
 
-      #visualization .vis-item.submission {
+      #container .vis-item.submission {
         margin-top: 8px;
+        cursor: pointer;
       }
 
-      #visualization .vis-item.community h1 {
+      #container #timeline .vis-item.submission.added {
+        background-color: #adff2f;
+        border-color: #008000;
+      }
+
+      #container .vis-item.community h1 {
         margin: 0;
       }
 
-      #visualization h1 {
+      #container h1 {
         font-size: 1.2em;
         font-weight: normal;
         line-height: 1.2em;
@@ -53,19 +103,11 @@
         overflow: hidden;
       }
 
-      #visualization .summary {
-        position: relative;
+      #container h4 {
+        font-size: 1em;
+        font-weight: normal;
         line-height: 1em;
-        max-height: 1em;
-        overflow: hidden;
-      }
-      #visualization .summary::after {
-        content: "...";
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        padding-left: 40px;
-        background: linear-gradient(to right, transparent, #d5ddf6 55%);
+        margin: 4px 0;
       }
 
       .tingle-modal-box {
@@ -76,10 +118,18 @@
         text-align: right;
         font-weight: normal;
       }
+
+      .hide {
+        z-index: 1 !important;
+      }
     </style>
   </head>
   <body>
-    <div id="visualization"></div>
+    <div id="container">
+      <div id="timeline"></div>
+      <div id="my-timeline" class="hide"></div>
+      <button id="toggle" class="btn" tabindex="-1">俺の<br>課表</button>
+    </div>
 
     <script type="text/babel" data-presets="es2015,stage-1">
       (async function() {
@@ -95,33 +145,33 @@
 
           return (text) => autolink.link(text)
         })()
-        const submissions = await fetch('https://coscup.org/2017-assets/json/submissions.json')
+        const datas = await fetch('https://coscup.org/2017-assets/json/submissions.json')
           .then(resp => resp.json())
 
-        const items = submissions.map(({ subject, summary, community, ...sub }) => ({
+        const submissions = datas.map(({ subject, summary, community, ...sub }) => ({
           ...sub,
 
           subject: spacing(subject),
           community: spacing(community),
           summary: autolink(spacing(summary).replace(/\r?\n/g, '<br>')),
         })).map(({ start, end, room, subject, summary, community, speaker, ...sub }, idx) => ({
-          start: new Date(start),
-          end: new Date(end),
           summary,
           community,
           speaker,
 
           id: idx,
+          start: new Date(start),
+          end: new Date(end),
           content: subject,
           title: subject,
           group: room,
           className: 'submission',
         }))
-        const groups = [ ...new Set(submissions.map(({ room }) => room)) ].map(room => ({
+        const groups = [ ...new Set(datas.map(({ room }) => room)) ].map(room => ({
           id: room,
           content: `Room ${room}`,
         }))
-        const communities = items.reduce((communities, { start, end, community: name, ...item }) => {
+        const communities = submissions.reduce((communities, { start, end, community: name, ...item }) => {
           if (name === '') return communities
 
           if (!communities[name])
@@ -147,8 +197,6 @@
           return communities
         }, {})
 
-        const modal = new tingle.modal()
-
         const getTime = (() => {
           const pad = (v) => v < 10 ? `0${v}` : v.toString()
 
@@ -157,18 +205,9 @@
             v.toString().replace(/2017-08-\d+T(\d+:\d+):00\+08:00/, (_, time) => time)
         })()
 
-        const timeline = new vis.Timeline(document.getElementById('visualization'), [
-          ...items,
-          ...Object.values(communities),
-          {
-            start: '2017-08-06T09:00:00+08:00',
-            end: '2017-08-06T17:10:00+08:00',
-            type: 'background',
-            className: 'dayTwo',
-
-            isBackground: true,
-          },
-        ], groups, {
+        const timelineOptions = {
+          start: '2017-08-05T08:40:00+08:00',
+          end: '2017-08-06T17:10:00+08:00',
           min: '2017-08-05T08:40:00+08:00',
           max: '2017-08-06T17:10:00+08:00',
           hiddenDates: {
@@ -178,16 +217,35 @@
           height: '100%',
           stack: false,
           selectable: false,
+          zoomMin: 5 * 60 * 1000,
+          rollingMode: {
+            follow: false,
+            offset: 0.5,
+          },
+        }
+
+        const items = new vis.DataSet([
+          ...submissions,
+          ...Object.values(communities),
+          {
+            start: '2017-08-06T09:00:00+08:00',
+            end: '2017-08-06T17:10:00+08:00',
+            type: 'background',
+            className: 'dayTwo',
+
+            isBackground: true,
+          },
+        ])
+
+        const timelineContainer = document.getElementById('timeline')
+        const timeline = new vis.Timeline(timelineContainer, items, groups, {
+          ...timelineOptions,
+
           margin: {
             item: {
               horizontal: 20,
               vertical: 40,
             },
-          },
-          zoomMin: 5 * 60 * 1000,
-          rollingMode: {
-            follow: false,
-            offset: 0.5,
           },
 
           template(item, element, data) {
@@ -202,11 +260,55 @@
           },
         })
 
-        timeline.on('click', ({ item: id }) => {
+        // my timeline
+        const mySubmissions = new vis.DataView(items, {
+          filter: ({ className, isBackground }) => isBackground || className.match(/added/),
+        })
+        const myTimelineContainer = document.getElementById('my-timeline')
+        const myTimeline = new vis.Timeline(myTimelineContainer, mySubmissions, {
+          ...timelineOptions,
+          stack: true,
+          order(l, r) {
+            return l.start.getTime() - r.start.getTime()
+          },
+
+          template({ start, end, content, summary, community, group, ...item }, element, data) {
+            return item.isBackground ? '' : (`
+              <small>${getTime(start)} - ${getTime(end)}</small>
+              <h4>${group} - ${community}</h4>
+              <h1>${content}</h1>
+            `)
+          },
+        })
+
+        // Modal
+        const modal = new tingle.modal({
+          footer: true,
+          stickyFooter: true,
+        })
+
+        ;[timeline, myTimeline].forEach(tl => tl.on('click', ({ item: id }) => {
           if (id == null) return
 
-          const item = items[id]
+          const item = items.get(id)
           const { start, end, content, summary, speaker } = item
+          const btnCallback = () => {
+            item.className = item.className.match(/added/) ? 'submission' : 'submission added'
+            items.update({
+              ...item,
+              id,
+            })
+            updateButton()
+          }
+          const updateButton = () => {
+            const footer = modal.modalBoxFooter
+            const btn = footer.getElementsByTagName('button')[0]
+            const added = item.className.match(/added/)
+            if (!btn) return
+
+            btn.innerHTML = added ? 'Remove from Timeline' : 'Add to Timeline'
+            btn.classList.toggle('remove', added)
+          }
 
           modal.setContent(`
             <small>${getTime(start)} - ${getTime(end)}</small>
@@ -214,15 +316,76 @@
             <h3>-- ${speaker.name}</h3>
             <p class="summary">${summary}</p>
           `)
+          modal.setFooterContent('')
+          modal.addFooterBtn('', 'btn', btnCallback)
+          updateButton()
           modal.open()
+        }))
+
+        // toggle
+        const toggleButton = document.getElementById('toggle')
+        const toggleTimeline = () => {
+          const showMy = toggleButton.classList.toggle('toggle')
+          timelineContainer.classList.toggle('hide', showMy)
+          myTimelineContainer.classList.toggle('hide', !showMy)
+        }
+        toggleButton.addEventListener('click', toggleTimeline)
+
+        // save my timeline
+        const replaceHash = (() => {
+          const { history, location } = window
+          if ('replaceState' in history) {
+            return (newHash) => {
+              if (newHash.charAt(0) !== '#') newHash = `#${newHash}`;
+              history.replaceState('', '', newHash);
+            }
+          } else {
+            const firstHash = location.hash.toString()
+            return (newHash) => {
+              if (newHash.charAt(0) !== '#') newHash = `#${newHash}`;
+              if (location.hash !== firstHash) history.back()
+              location.hash = newHash
+            }
+          }
+        })()
+
+        const load = window.location.hash
+        if (load && load !== '#') {
+          items.update(load.substring(1)
+            .split('_')
+            .map(item => ({
+              id: Number(item),
+              className: 'submission added',
+            })))
+        }
+
+        items.on('update', (ev, datas) => {
+          const save = mySubmissions.get()
+            .filter(item => !item.isBackground)
+            .map(item => item.id.toString())
+            .sort()
+            .join('_')
+          replaceHash(save)
         })
+
+        // sync timeline and my timeline viewport
+        const syncTimeline = ({ start, end, byUser }) => {
+          if (!byUser) return
+
+          timeline.setWindow(Number(start), Number(end), { animation: false })
+          myTimeline.setWindow(Number(start), Number(end), { animation: false })
+        }
+        ;[timeline, myTimeline].forEach(tl => tl.on('rangechanged', syncTimeline))
 
         // record last view
         const { localStorage } = window
         if (localStorage) {
           const [start, end] = (localStorage.getItem('lastRange') || '')
             .split('#')
-          if (start && end) timeline.setWindow(Number(start), Number(end), { animation: false })
+          if (start && end) {
+            timeline.setWindow(Number(start), Number(end), { animation: false })
+            myTimeline.setWindow(Number(start), Number(end), { animation: false })
+          }
 
           timeline.on('rangechanged', ({ start, end }) => {
             localStorage.setItem('lastRange', `${Number(start)}#${Number(end)}`)
@@ -235,19 +398,26 @@
             duration: 200,
             easingFunction: 'linear',
           }
+          const currentTimeline = () => myTimelineContainer.classList.contains('hide') ?
+            timeline :
+            myTimeline
 
           let moving = null;
           const moveTimeline = (percent) => {
             if (moving == percent) return
             moving = percent
 
-            const { start, end } = timeline.getWindow()
+            const tl = currentTimeline()
+            const { start, end } = tl.getWindow()
             const interval = end - start
 
-            timeline.setWindow({
+            tl.setWindow({
               animation,
               start: start.valueOf() - interval * percent,
               end: end.valueOf() - interval * percent,
+            }, () => {
+              const { start, end } = tl.getWindow()
+              syncTimeline({ start, end, byUser: true })
             })
 
             setTimeout(() => moving = null, 200)
@@ -258,18 +428,31 @@
             if (zooming == percent) return
             zooming = percent
 
+            const tl = currentTimeline()
+            const callback = () => {
+              const { start, end } = tl.getWindow()
+              syncTimeline({ start, end, byUser: true })
+            }
+
             if (percent > 0)
-              timeline.zoomIn(percent, { animation })
+              tl.zoomIn(percent, { animation }, callback)
             else
-              timeline.zoomOut(-percent, { animation })
+              tl.zoomOut(-percent, { animation }, callback)
 
             setTimeout(() => zooming = null, 200)
           }
 
-          Mousetrap.bind('left', () => moveTimeline(0.2));
-          Mousetrap.bind('right', () => moveTimeline(-0.2));
-          Mousetrap.bind('up', () => zoomTimeline(0.3));
-          Mousetrap.bind('down', () => zoomTimeline(-0.3));
+          Mousetrap.bind('left', () => moveTimeline(0.2))
+          Mousetrap.bind('right', () => moveTimeline(-0.2))
+          Mousetrap.bind('up', () => zoomTimeline(0.3))
+          Mousetrap.bind('down', () => zoomTimeline(-0.3))
+          Mousetrap.bind('tab', (ev) => {
+            ev.preventDefault ?
+              ev.preventDefault() :
+              ev.returnValue = false // ie
+
+            toggleTimeline()
+          })
         })()
       })()
     </script>

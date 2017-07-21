@@ -370,7 +370,7 @@
           template({ start, end, content, summary, community, group, ...item }, element, data) {
             return item.isBackground ? '' : (`
               <small>${getTime(start)} - ${getTime(end)}</small>
-              <h4>${group} - ${community}</h4>
+              <h4>${group}${community ? ` - ${community}` : ''}</h4>
               <h1>${content}</h1>
             `)
           },
@@ -386,7 +386,7 @@
           if (id == null) return
 
           const item = items.get(id)
-          const { start, end, content, summary, speaker } = item
+          const { start, end, content, summary, speaker, group, community } = item
           const btnCallback = () => {
             item.className = item.className.match(/added/) ? 'submission' : 'submission added'
             items.update({
@@ -407,6 +407,7 @@
 
           modal.setContent(`
             <small>${getTime(start)} - ${getTime(end)}</small>
+            <h4>${group}${community ? ` - ${community}` : ''}</h4>
             <h1>${content}</h1>
             <h3>-- ${speaker.name}</h3>
             <p class="summary">${summary}</p>

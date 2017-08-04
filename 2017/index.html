@@ -187,6 +187,43 @@
         font-weight: normal;
       }
 
+      .tingle-modal-box .speaker {
+        display: block;
+        margin: 0 -3rem;
+        padding: 1.2em 3rem;
+        background-color: #eee;
+      }
+
+      .tingle-modal-box .speaker .avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 24px;
+        margin-right: .8em;
+        float: left;
+      }
+
+      .tingle-modal-box .speaker .name {
+        line-height: 48px;
+        margin: 0;
+        vertical-align: middle;
+      }
+
+      .tingle-modal-box .speaker .bio {
+        display: block;
+        margin: 0;
+        max-height: 0;
+        overflow-y: hidden;
+        transition: max-height .35s ease-in-out;
+      }
+
+      .tingle-modal-box .speaker #speaker_bio {
+        display: none;
+      }
+
+      .tingle-modal-box .speaker #speaker_bio:checked ~ .bio {
+        max-height: 120em;
+      }
+
       .hide {
         z-index: 1 !important;
       }
@@ -229,12 +266,17 @@
         const datas = await fetch('https://coscup.org/2017-assets/json/submissions.json')
           .then(resp => resp.json())
 
-        const submissions = datas.map(({ subject, summary, community, ...sub }) => ({
+        const submissions = datas.map(({ subject, summary, community, speaker, ...sub }) => ({
           ...sub,
 
           subject: spacing(subject),
           community: spacing(community),
           summary: autolink(spacing(summary).replace(/\r?\n/g, '<br>')),
+          speaker: {
+            ...speaker,
+
+            bio: autolink(spacing(speaker.bio).replace(/\r?\n/g, '<br>')),
+          },
         })).map(({ start, end, room, subject, summary, community, speaker, ...sub }, idx) => ({
           summary,
           community,
@@ -377,6 +419,7 @@
         })
 
         // Modal
+        tingle.modal.prototype.isOverflow = () => true
         const modal = new tingle.modal({
           footer: true,
           stickyFooter: true,
@@ -409,7 +452,14 @@
             <small>${getTime(start)} - ${getTime(end)}</small>
             <h4>${group}${community ? ` - ${community}` : ''}</h4>
             <h1>${content}</h1>
-            <h3>-- ${speaker.name}</h3>
+            <label for="speaker_bio">
+            <div class="speaker">
+              <img class="avatar" src="${speaker.avatar}" />
+              <p class="name">${speaker.name}</p>
+              <input type="checkbox" id="speaker_bio" />
+              <p class="bio"><br />${speaker.bio}</p>
+            </div>
+            </label>
             <p class="summary">${summary}</p>
           `)
           modal.setFooterContent('')

@@ -36,7 +36,7 @@
 
       #toggle {
         position: absolute;
-        bottom: 3.4em;
+        bottom: 2px;
         left: 2px;
         filter: opacity(0.8);
         z-index: 10;
@@ -79,6 +79,16 @@
       .btn.remove:hover {
         background: #fff;
         color: #9a0325;
+      }
+
+      .live {
+        display: block;
+        text-decoration: none;
+        font-weight: bold;
+        background: #e62117;
+        color: #fff;
+        padding: 2px 0.6em 3px;
+        border-radius: 4px;
       }
 
       #container .vis-item.dayTwo {
@@ -187,6 +197,13 @@
         font-weight: normal;
       }
 
+      .tingle-modal-box .live {
+        display: inline-block;
+        font-size: 8pt;
+        vertical-align: bottom;
+        margin-right: 2px;
+      }
+
       .tingle-modal-box .speaker {
         display: block;
         cursor: pointer;
@@ -264,6 +281,16 @@
 
           return (text) => autolink.link(text)
         })()
+        const lives = {
+          '101': 'https://www.youtube.com/watch?v=hHQAJe5JqWk&list=PLqfib4St70XOZt4e6XNiigzW9GI7iG-Iq',
+          '201': 'https://www.youtube.com/watch?v=A0yGC3EIDPo&list=PLqfib4St70XOZt4e6XNiigzW9GI7iG-Iq',
+          '202': 'https://www.youtube.com/watch?v=OyxAvhrA-6Y&list=PLqfib4St70XOZt4e6XNiigzW9GI7iG-Iq',
+          '303': 'https://www.youtube.com/watch?v=RT-DdH977Yw&list=PLqfib4St70XOZt4e6XNiigzW9GI7iG-Iq',
+          '305': 'https://www.youtube.com/watch?v=t6HdKXzjGDc&list=PLqfib4St70XOZt4e6XNiigzW9GI7iG-Iq',
+          '306': 'https://www.youtube.com/watch?v=cCRuv9aQROQ&list=PLqfib4St70XOZt4e6XNiigzW9GI7iG-Iq',
+          '307': 'https://www.youtube.com/watch?v=5bESRA3r0UM&list=PLqfib4St70XOZt4e6XNiigzW9GI7iG-Iq',
+          '403': 'https://www.youtube.com/watch?v=uXloaoFQgQc&list=PLqfib4St70XOZt4e6XNiigzW9GI7iG-Iq',
+        }
         const datas = await fetch('https://coscup.org/2017-assets/json/submissions.json')
           .then(resp => resp.json())
 
@@ -293,7 +320,10 @@
         }))
         const groups = [ ...new Set(datas.map(({ room }) => room)) ].map(room => ({
           id: room,
-          content: `Room ${room}`,
+          content: `
+            Room ${room}
+            ${room in lives ? `<a href="${lives[room]}" target="_blank" class="live">● Live</a>` : ''}
+          `,
           className: `room-${room}`,
         }))
         const communities = submissions.reduce((communities, { start, end, community: name, ...item }) => {
@@ -451,7 +481,11 @@
 
           modal.setContent(`
             <small>${getTime(start)} - ${getTime(end)}</small>
-            <h4>${group}${community ? ` - ${community}` : ''}</h4>
+            <h4>
+              ${group in lives ? `<a href="${lives[group]}" target="_blank" class="live">● Live</a>` : ''}
+              ${group}
+              ${community ? ` - ${community}` : ''}
+            </h4>
             <h1>${content}</h1>
             <label for="speaker_bio">
             <div class="speaker">
